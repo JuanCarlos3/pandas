@@ -172,8 +172,11 @@ class HTMLFormatter:
         col_space = self.col_space.get(s, None)
 
         if header and col_space is not None:
-            tags = tags or ""
-            tags += f'style="min-width: {col_space};"'
+            style_tag = f'style="min-width: {col_space};"'
+            if tags:
+                tags = f"{style_tag} {tags}"
+            else:
+                tags = style_tag
 
         self._write_cell(s, kind="th", indent=indent, tags=tags)
 
@@ -183,6 +186,15 @@ class HTMLFormatter:
     def _write_cell(
         self, s: Any, kind: str = "td", indent: int = 0, tags: str | None = None
     ) -> None:
+        if self.border is not None:
+            border_style = f"border: {self.border}px solid black;"
+            if tags is None:
+                tags = f'style="{border_style}"'
+            elif 'style="' in tags:  # style already exists in tags
+                tags = tags.replace('style="', f'style="{border_style} ')
+            else:  # tags exists but no style within them
+                tags = f'style="{border_style}" {tags}'
+
         if tags is not None:
             start_tag = f"<{kind} {tags}>"
         else:
